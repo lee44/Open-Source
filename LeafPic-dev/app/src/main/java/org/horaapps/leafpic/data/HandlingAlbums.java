@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import org.horaapps.leafpic.data.sort.SortingMode;
 import org.horaapps.leafpic.data.sort.SortingOrder;
@@ -18,8 +19,8 @@ import java.util.HashSet;
 /**
  * Created by dnld on 27/04/16.
  */
-public class HandlingAlbums extends SQLiteOpenHelper {
-
+public class HandlingAlbums extends SQLiteOpenHelper
+{
     private static final int DATABASE_VERSION = 12;
     private static final String DATABASE_NAME = "folders.db";
     private static final String TABLE_ALBUMS = "folders";
@@ -37,17 +38,21 @@ public class HandlingAlbums extends SQLiteOpenHelper {
 
     private static HandlingAlbums mInstance = null;
 
-    private HandlingAlbums(Context context) {
+    private HandlingAlbums(Context context)
+    {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
-    public static HandlingAlbums getInstance(Context context) {
-        if(mInstance == null)
+    public static HandlingAlbums getInstance(Context context)
+    {
+        if (mInstance == null)
             mInstance = new HandlingAlbums(context);
         return mInstance;
     }
 
-    @Override public void onCreate(SQLiteDatabase db) {
+    @Override
+    public void onCreate(SQLiteDatabase db)
+    {
         db.execSQL("CREATE TABLE " +
                 TABLE_ALBUMS + "(" +
                 ALBUM_PATH + " TEXT," +
@@ -61,46 +66,60 @@ public class HandlingAlbums extends SQLiteOpenHelper {
         db.execSQL(String.format("CREATE UNIQUE INDEX idx_path ON %s (%s)", TABLE_ALBUMS, ALBUM_PATH));
     }
 
-    @Override public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
+    {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_ALBUMS);
         db.execSQL("DROP INDEX IF EXISTS idx_path");
         onCreate(db);
     }
 
-    public void excludeAlbum(String path) {
+    public void excludeAlbum(String path)
+    {
         SQLiteDatabase db = getWritableDatabase();
         excludeAlbum(db, Album.withPath(path));
         db.close();
     }
 
-    private void excludeAlbum(SQLiteDatabase db, Album album) {
+    private void excludeAlbum(SQLiteDatabase db, Album album)
+    {
         changeSatusAlbum(db, album, EXCLUDED);
         // TODO: 3/26/17 notify
     }
 
-    public void addFolderToWhiteList(String path) {
+    public void addFolderToWhiteList(String path)
+    {
         SQLiteDatabase db = getWritableDatabase();
         changeSatusAlbum(db, Album.withPath(path), INCLUDED);
         db.close();
     }
 
-    public ArrayList<String> getExcludedFolders(Context context) {
-        ArrayList<String>  list = new ArrayList<>();
+    public ArrayList<String> getExcludedFolders(Context context)
+    {
+        ArrayList<String> list = new ArrayList<>();
         HashSet<File> storageRoots = StorageHelper.getStorageRoots(context);
-        for(File file : storageRoots)
-            // it has a lot of garbage
+
+        for (File file : storageRoots)
+            /* list will contain two paths
+               /storage/emulated/0/Android (internal)
+              /storage/0000-0000/Android (external)
+            */
             list.add(new File(file.getPath(), "Android").getPath());
 
+        Log.v("Dodgers",getFolders(EXCLUDED).toString());
         list.addAll(getFolders(EXCLUDED));
         return list;
     }
 
-    private void changeSatusAlbum(SQLiteDatabase db, Album album, int status) {
+    private void changeSatusAlbum(SQLiteDatabase db, Album album, int status)
+    {
         ContentValues values = new ContentValues();
         values.put(ALBUM_STATUS, status);
-        if (exist(db, album.getPath())) {
-            db.update(TABLE_ALBUMS, values, ALBUM_PATH+"=?", new String[]{ album.getPath() });
-        } else {
+        if (exist(db, album.getPath()))
+        {
+            db.update(TABLE_ALBUMS, values, ALBUM_PATH + "=?", new String[]{album.getPath()});
+        } else
+        {
             values.put(ALBUM_PATH, album.getPath());
             values.put(ALBUM_PINNED, 0);
             values.put(ALBUM_SORTING_MODE, SortingMode.DATE.getValue());
@@ -110,7 +129,8 @@ public class HandlingAlbums extends SQLiteOpenHelper {
         }
     }
 
-    public static ContentValues getDefaults(String path) {
+    public static ContentValues getDefaults(String path)
+    {
         ContentValues values = new ContentValues();
         values.put(ALBUM_PATH, path);
         values.put(ALBUM_PINNED, 0);
@@ -121,23 +141,24 @@ public class HandlingAlbums extends SQLiteOpenHelper {
     }
 
 
-    public void clearStatusFolder(String path) {
+    public void clearStatusFolder(String path)
+    {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(ALBUM_STATUS, "");
         if (exist(db, path))
-            db.update(TABLE_ALBUMS, values, ALBUM_PATH+"=?", new String[]{ path });
+            db.update(TABLE_ALBUMS, values, ALBUM_PATH + "=?", new String[]{path});
         // NOTE: it make no difference if the folder was included
         //excludedFolders.remove(path);
         db.close();
     }
 
     /**
-     *
      * @param status 1 for EXCLUDED, 2 for INCLUDED
      * @return
      */
-    public ArrayList<String> getFolders(int status) {
+    public ArrayList<String> getFolders(int status)
+    {
         ArrayList<String> list = new ArrayList<>();
         SQLiteDatabase db = getReadableDatabase();
         Cursor cur = db.query(TABLE_ALBUMS, new String[]{ALBUM_PATH}, ALBUM_STATUS + "=?", new String[]{String.valueOf(status)}, null, null, null);
@@ -148,7 +169,8 @@ public class HandlingAlbums extends SQLiteOpenHelper {
         return list;
     }
 
-    public int getFoldersCount(int status) {
+    public int getFoldersCount(int status)
+    {
         int c = 0;
         SQLiteDatabase db = getReadableDatabase();
         Cursor cur = db.query(TABLE_ALBUMS, new String[]{"count(*)"}, ALBUM_STATUS + "=?", new String[]{String.valueOf(status)}, null, null, null);
@@ -159,49 +181,59 @@ public class HandlingAlbums extends SQLiteOpenHelper {
         return c;
     }
 
-    private static boolean exist(SQLiteDatabase db, String path) {
+    private static boolean exist(SQLiteDatabase db, String path)
+    {
         Cursor cur = db.rawQuery(
                 String.format("SELECT EXISTS(SELECT 1 FROM %s WHERE %s=? LIMIT 1)", TABLE_ALBUMS, ALBUM_PATH),
-                new String[]{ path });
-        boolean tracked = cur.moveToFirst() &&  cur.getInt(0) == 1;
+                new String[]{path});
+        boolean tracked = cur.moveToFirst() && cur.getInt(0) == 1;
         cur.close();
-        return  tracked;
+        return tracked;
     }
 
-    public void setPined(String path, boolean pinned) {
+    public void setPined(String path, boolean pinned)
+    {
         ContentValues values = new ContentValues();
         values.put(ALBUM_PINNED, pinned ? 1 : 0);
         setValue(path, values);
     }
 
-    public void setCover(String path, String mediaPath) {
+    public void setCover(String path, String mediaPath)
+    {
         ContentValues values = new ContentValues();
         values.put(ALBUM_COVER_PATH, mediaPath);
         setValue(path, values);
     }
 
-    public void setSortingMode(String path, int column) {
+    public void setSortingMode(String path, int column)
+    {
         ContentValues values = new ContentValues();
         values.put(ALBUM_SORTING_MODE, column);
         setValue(path, values);
     }
 
-    public void setSortingOrder(String path, int sortingOrder) {
+    public void setSortingOrder(String path, int sortingOrder)
+    {
         ContentValues values = new ContentValues();
         values.put(ALBUM_SORTING_ORDER, sortingOrder);
         setValue(path, values);
     }
 
-    private void setValue(String path, ContentValues values) {
+    private void setValue(String path, ContentValues values)
+    {
         SQLiteDatabase db = this.getWritableDatabase();
-        db.update(TABLE_ALBUMS, values, ALBUM_PATH+"=?", new String[]{ path });
+        db.update(TABLE_ALBUMS, values, ALBUM_PATH + "=?", new String[]{path});
         db.close();
     }
 
-    @NonNull public static AlbumSettings getSettings(SQLiteDatabase db, String path) {
+    @NonNull
+    public static AlbumSettings getSettings(SQLiteDatabase db, String path)
+    {
         Cursor cursor = null;
-        try {
-            if (exist(db, path)) {
+        try
+        {
+            if (exist(db, path))
+            {
                 cursor = db.query(
                         TABLE_ALBUMS,
                         StringUtils.asArray(
@@ -226,7 +258,8 @@ public class HandlingAlbums extends SQLiteOpenHelper {
                         getDefaults(path));
 
             return AlbumSettings.getDefaults();
-        } finally {
+        } finally
+        {
             if (cursor != null)
                 cursor.close();
         }
