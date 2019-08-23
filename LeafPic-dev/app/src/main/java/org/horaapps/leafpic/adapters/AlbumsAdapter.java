@@ -98,7 +98,6 @@ public class AlbumsAdapter extends ThemedAdapter<AlbumsAdapter.ViewHolder>
     @Override
     public void onBindViewHolder(final AlbumsAdapter.ViewHolder holder, int position)
     {
-        // TODO Calvin: Major Refactor - No business logic here.
         Album a = albums.get(position);
         holder.refreshTheme(getThemeHelper(), cardViewStyle, a.isSelected());
 
@@ -450,8 +449,7 @@ public class AlbumsAdapter extends ThemedAdapter<AlbumsAdapter.ViewHolder>
 
     public int add(Album album)
     {
-        int i = Collections.binarySearch(
-                albums, album, AlbumsComparators.getComparator(sortingMode, sortingOrder));
+        int i = Collections.binarySearch(albums, album, AlbumsComparators.getComparator(sortingMode, sortingOrder));
         if (i < 0) i = ~i;
         albums.add(i, album);
         notifyItemInserted(i);

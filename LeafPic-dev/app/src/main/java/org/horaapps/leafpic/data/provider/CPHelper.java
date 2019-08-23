@@ -52,11 +52,11 @@ public class CPHelper {
         return res.toString();
 
     }
-
+    //All this method does is it builds a query. In the Query.java, the toString will print an entire query string.
     private static Observable<Album> getAlbums(Context context, ArrayList<String> excludedAlbums, SortingMode sortingMode, SortingOrder sortingOrder) {
 
         Query.Builder query = new Query.Builder()
-                .uri(MediaStore.Files.getContentUri("external"))
+                .uri(MediaStore.Files.getContentUri("external")) // external(sdcard) location for the media files i.e content://
                 .projection(Album.getProjection())
                 .sort(sortingMode.getAlbumsColumn())
                 .ascending(sortingOrder.isAscending());
@@ -79,8 +79,6 @@ public class CPHelper {
             args.add(MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE);
         }
 
-
-        //NOTE: LIKE params for query
         for (String s : excludedAlbums)
             args.add(s+"%");
 

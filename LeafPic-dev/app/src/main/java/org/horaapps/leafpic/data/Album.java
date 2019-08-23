@@ -50,12 +50,9 @@ public class Album implements CursorHandler, Parcelable {
 		this(path, name, -1, count, dateModified);
 	}
 
-	public Album(Cursor cur) {
-		this(StringUtils.getBucketPathByImagePath(cur.getString(3)),
-				cur.getString(1),
-				cur.getLong(0),
-				cur.getInt(2),
-				cur.getLong(4));
+	public Album(Cursor cur)
+	{
+		this(StringUtils.getBucketPathByImagePath(cur.getString(3)),cur.getString(1),cur.getLong(0),cur.getInt(2),cur.getLong(4));
 		setLastMedia(new Media(cur.getString(3)));
 	}
 
